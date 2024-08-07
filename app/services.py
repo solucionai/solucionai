@@ -7,8 +7,11 @@ from bson import ObjectId
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Database configuration
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb://viaduct.proxy.rlwy.net:25989/')
+
+# Replace 'your_database' and 'your_collection' with the correct values
+client = MongoClient("mongodb://mongo:juzfrgHjdNilrrIVybaxVJrBLLRLTKrp@viaduct.proxy.rlwy.net:25989/your_database")
+
+
 DATABASE_NAME = os.getenv('DATABASE_NAME', 'seu_banco_de_dados')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME', 'sua_colecao')
 
