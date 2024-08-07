@@ -8,24 +8,16 @@ from bson import ObjectId
 logging.basicConfig(level=logging.INFO)
 
 
-# Use as credenciais e o host do Railway
-MONGO_HOST = "mongodb.railway.internal"
-MONGO_PORT = 27017
-MONGO_USER = "mongo"
-MONGO_PASSWORD = "juzfrgHjdNilrrIVybaxVJrBLLRLTKrp"
-DATABASE_NAME = "your_database"
-
-# Cria a URL de conexão com as credenciais
-connection_string = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{DATABASE_NAME}"
-
-# Conecta ao MongoDB
-client = MongoClient(connection_string)
-db = client[DATABASE_NAME]
 
 
-# Initialize database connection
+
+
 def init_db():
     try:
+        MONGO_URI = os.getenv("MONGO_URL")
+        DATABASE_NAME = os.getenv("DATABASE_NAME", "default_db_name")
+        COLLECTION_NAME = os.getenv("COLLECTION_NAME", "default_collection_name")
+        
         client = MongoClient(MONGO_URI)
         db = client[DATABASE_NAME]
         collection = db[COLLECTION_NAME]
