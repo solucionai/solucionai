@@ -1,37 +1,43 @@
 from pymongo import MongoClient, errors
 from datetime import datetime
 import logging
+import os
+from bson import ObjectId
 
-# Configuração do log
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Configuração da conexão com o MongoDB
-client = None
-db = None
-collection = None
+# Database configuration
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+DATABASE_NAME = os.getenv('DATABASE_NAME', 'seu_banco_de_dados')
+COLLECTION_NAME = os.getenv('COLLECTION_NAME', 'sua_colecao')
 
+# Initialize database connection
 def init_db():
-    global client, db, collection
     try:
-        client = MongoClient('mongodb://localhost:27017/')
-        db = client['seu_banco_de_dados']
-        collection = db['sua_colecao']
-        logging.info("Conexão com o MongoDB estabelecida com sucesso")
+        client = MongoClient(MONGO_URI)
+        db = client[DATABASE_NAME]
+        collection = db[COLLECTION_NAME]
+        logging.info("Connected to MongoDB successfully")
+        return collection
     except errors.ConnectionFailure as e:
-        logging.error(f"Erro de conexão com o MongoDB: {e}")
+        logging.error(f"Failed to connect to MongoDB: {e}")
+        raise
+
+collection = init_db()
 
 def store_data(data):
     if not data:
-        logging.warning("Nenhum dado fornecido na solicitação")
+        logging.warning("No data provided in the request")
         return {'error': 'No data provided'}, 400
 
     numero_wpp = data.get('numero_wpp')
     
     if not numero_wpp:
-        logging.warning('Campo "numero_wpp" ausente na solicitação')
+        logging.warning('Field "numero_wpp" is required in the request')
         return {'error': 'Field "numero_wpp" is required'}, 400
     
-    # Adiciona ou atualiza os timestamps
+    # Add or update timestamps
     now = datetime.utcnow()
     existing_document = collection.find_one({'numero_wpp': numero_wpp})
     
@@ -41,18 +47,48 @@ def store_data(data):
         data['created_at'] = now
         data['last_modified'] = now
     
-    # Verifica se o documento com o numero_wpp já existe e atualiza ou insere
+    # Update or insert document
     try:
         result = collection.update_one(
-            {'numero_wpp': numero_wpp},  # Filtro para encontrar o documento
-            {'$set': data},  # Dados a serem atualizados/adicionados
-            upsert=True  # Se não encontrar, insere um novo documento
+            {'numero_wpp': numero_wpp},  # Filter to find the document
+            {'$set': data},  # Data to update/add
+            upsert=True  # If not found, insert a new document
         )
-        logging.info(f"Documento atualizado/inserido com sucesso: {result}")
+        logging.info(f"Document updated/inserted successfully: {result}")
         return {'status': 'Data stored successfully'}, 200
     except errors.PyMongoError as e:
-        logging.error(f"Erro ao salvar dados no MongoDB: {e}")
+        logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
 
-# Inicializa a conexão com o banco de dados ao importar o módulo
-init_db()
+def get_data(numero_wpp):
+    try:
+        document = collection.find_one({'numero_wpp': numero_wpp})
+        if not document:
+            logging.warning(f"No document found with numero_wpp: {numero_wpp}")
+            return {'error': 'Document not found'}, 404
+
+        # Convert ObjectId to string
+        document['_id'] = str(document['_id'])
+        
+        logging.info(f"Document retrieved successfully: {document}")
+        return document, 200
+    except errors.PyMongoError as e:
+        logging.error(f"Failed to retrieve data from MongoDB: {e}")
+        return {'error': 'Failed to retrieve data'}, 500
+
+def get_all_data():
+    try:
+        documents = list(collection.find({}))
+        if not documents:
+            logging.warning("No documents found in the collection")
+            return {'error': 'No documents found'}, 404
+
+        # Convert ObjectId to string for each document
+        for document in documents:
+            document['_id'] = str(document['_id'])
+
+        logging.info(f"{len(documents)} documents retrieved successfully")
+        return documents, 200
+    except errors.PyMongoError as e:
+        logging.error(f"Failed to retrieve data from MongoDB: {e}")
+        return {'error': 'Failed to retrieve data'}, 500
