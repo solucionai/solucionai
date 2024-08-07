@@ -61,13 +61,24 @@ def store_data(data):
         data['last_modified'] = now
         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
     
+    # Remove 'RAW_DATA' from the main data to avoid duplication
+    raw_data_to_store = data.pop('RAW_DATA')
+    
     # Update or insert document
     try:
         result = collection.update_one(
             {'numero_wpp': numero_wpp},  # Filter to find the document
-            {'$set': data},  # Data to update/add
+            {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Data to update/add
             upsert=True  # If not found, insert a new document
         )
+        
+        # Update RAW_DATA separately to avoid overwriting during upsert
+        if existing_document:
+            result = collection.update_one(
+                {'numero_wpp': numero_wpp},
+                {'$set': {'RAW_DATA': raw_data_to_store}}
+            )
+        
         logging.info(f"Document updated/inserted successfully: {result}")
         return {'status': 'Data stored successfully'}, 200
     except errors.PyMongoError as e:
