@@ -13,19 +13,22 @@ logging.basicConfig(level=logging.INFO)
 
 
 def init_db():
+    connection_url = "mongodb://mongo:juzfrgHjdNilrrIVybaxVJrBLLRLTKrp@viaduct.proxy.rlwy.net:25989"
+    client = MongoClient(connection_url)
+    
     try:
-        MONGO_URI = os.getenv("MONGO_URL")
-        DATABASE_NAME = os.getenv("DATABASE_NAME", "default_db_name")
-        COLLECTION_NAME = os.getenv("COLLECTION_NAME", "default_collection_name")
+        # Conecte-se ao banco de dados específico se desejar
+        db = client['nome_do_banco_de_dados']
         
-        client = MongoClient(MONGO_URI)
-        db = client[DATABASE_NAME]
-        collection = db[COLLECTION_NAME]
-        logging.info("Connected to MongoDB successfully")
-        return collection
-    except errors.ConnectionFailure as e:
-        logging.error(f"Failed to connect to MongoDB: {e}")
-        raise
+        # Testa a conexão
+        server_info = client.server_info()  # Isso lançará uma exceção se a conexão falhar
+        print("Conectado ao MongoDB com sucesso.")
+        
+        # Retorna o objeto do banco de dados para ser usado em outras partes do aplicativo
+        return db
+    except Exception as e:
+        print(f"Erro ao conectar ao MongoDB: {e}")
+        return None
 
 collection = init_db()
 
