@@ -32,6 +32,7 @@ def init_db():
     except Exception as e:
         print(f"Erro ao conectar ao MongoDB: {e}")
         return None
+collection = init_db()
 
 def store_data(data):
     if not data:
