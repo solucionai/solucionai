@@ -8,7 +8,7 @@ from bson import ObjectId
 logging.basicConfig(level=logging.INFO)
 
 # Database configuration
-MONGO_URI = os.getenv('MONGO_URI', 'http://viaduct.proxy.rlwy.net:25989/')
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb:// http://viaduct.proxy.rlwy.net:25989/')
 DATABASE_NAME = os.getenv('DATABASE_NAME', 'seu_banco_de_dados')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME', 'sua_colecao')
 
