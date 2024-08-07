@@ -46,19 +46,20 @@ def store_data(data):
         logging.warning('Field "numero_wpp" is required in the request')
         return {'error': 'Field "numero_wpp" is required'}, 400
     
-    # Adiciona o campo RAW_DATA com os dados em formato de texto bruto
-    raw_data = json.dumps(data)
-    data['RAW_DATA'] = raw_data
-
     # Add or update timestamps
     now = datetime.utcnow()
     existing_document = collection.find_one({'numero_wpp': numero_wpp})
     
     if existing_document:
         data['last_modified'] = now
+        # Update RAW_DATA with existing data and new data
+        existing_raw_data = existing_document.get('RAW_DATA', {})
+        updated_raw_data = {**existing_raw_data, **data}
+        data['RAW_DATA'] = updated_raw_data
     else:
         data['created_at'] = now
         data['last_modified'] = now
+        data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
     
     # Update or insert document
     try:
@@ -72,7 +73,7 @@ def store_data(data):
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
-        
+
 
 def get_data(numero_wpp):
     try:
