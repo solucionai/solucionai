@@ -17,20 +17,21 @@ def init_db():
     client = MongoClient(connection_url)
     
     try:
-        # Conecte-se ao banco de dados específico se desejar
-        db = client['nome_do_banco_de_dados']
+        # Conecte-se ao banco de dados 'test'
+        db = client['test']
+        
+        # Conecte-se à coleção 'solucionai_clientes'
+        collection = db['solucionai_clientes']
         
         # Testa a conexão
         server_info = client.server_info()  # Isso lançará uma exceção se a conexão falhar
         print("Conectado ao MongoDB com sucesso.")
         
-        # Retorna o objeto do banco de dados para ser usado em outras partes do aplicativo
-        return db
+        # Retorna o objeto da coleção para ser usado em outras partes do aplicativo
+        return collection
     except Exception as e:
         print(f"Erro ao conectar ao MongoDB: {e}")
         return None
-
-collection = init_db()
 
 def store_data(data):
     if not data:
