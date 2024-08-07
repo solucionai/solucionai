@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Any
 import logging
-from app.services import store_data, get_data, get_all_data
+from services import store_data, get_data, get_all_data
 
 app = FastAPI()
 
