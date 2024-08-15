@@ -127,13 +127,17 @@ def get_all_data():
         return {'error': 'Failed to retrieve data'}, 500
 
 
-
-# Novo endpoint para limpar o banco de dados
-@app.delete("/clear_db")
-async def clear_db_endpoint():
-    result, status_code = clear_data()  # Chamando a função de limpar o banco de dados
-
-    if status_code != 200:
-        raise HTTPException(status_code=status_code, detail="Erro ao limpar o banco de dados.")
-    
-    return {"message": "Banco de dados limpo com sucesso!"}
+# Função para limpar todos os dados da coleção
+def clear_data():
+    try:
+        collection = init_db()  # Inicializa a conexão e obtém a coleção
+        result = collection.delete_many({})  # Deleta todos os documentos da coleção
+        
+        # Verifica se a operação foi bem-sucedida
+        if result.deleted_count > 0:
+            return {"message": f"{result.deleted_count} documentos deletados com sucesso."}, 200
+        else:
+            return {"message": "Nenhum documento encontrado para deletar."}, 200
+    except Exception as e:
+        # Caso haja algum erro durante a operação
+        return {"error": str(e)}, 500
