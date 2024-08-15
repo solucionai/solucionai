@@ -34,7 +34,6 @@ def init_db():
         return None
 collection = init_db()
 
-
 def store_data(data):
     if not data:
         logging.warning("No data provided in the request")
@@ -60,8 +59,8 @@ def store_data(data):
     else:
         # Get the last ID and increment it by 1
         last_user = collection.find_one(sort=[('id', -1)])  # Sort by 'id' in descending order
-        new_id = (last_user['id'] + 1) if last_user else 1
-        data['id'] = new_id  # Assign new ID
+        new_id = (last_user['id'] + 1) if last_user else 1  # Assign new ID if there are no users
+        data['id'] = new_id  # Assign the new ID to the data
         
         data['created_at'] = now
         data['last_modified'] = now
@@ -90,7 +89,6 @@ def store_data(data):
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
-
 
 
 def get_data(numero_wpp):
