@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Any
 import logging
-from app.services import store_data, get_data, get_all_data
+from app.services import store_data, get_data, get_all_data, clear_data
 
 app = FastAPI()
 
@@ -45,3 +45,12 @@ async def retrieve_all_data_endpoint():
         raise HTTPException(status_code=status_code, detail=result['error'])
 
     return result
+
+@app.delete("/clear_db")
+async def clear_db_endpoint():
+    result, status_code = clear_data()  # Chamando a função de limpar o banco de dados
+
+    if status_code != 200:
+        raise HTTPException(status_code=status_code, detail="Erro ao limpar o banco de dados.")
+    
+    return {"message": "Banco de dados limpo com sucesso!"}
