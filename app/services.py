@@ -1,4 +1,4 @@
-from pymongo import MongoClient, errors
+from pymongo import MongoClient, errors, DESCENDING
 from datetime import datetime
 import logging
 import os
@@ -45,6 +45,15 @@ def store_data(data):
     if not numero_wpp:
         logging.warning('Field "numero_wpp" is required in the request')
         return {'error': 'Field "numero_wpp" is required'}, 400
+
+    # Gerar o ID do usuário automaticamente
+    last_user = collection.find_one({}, sort=[("user_id", DESCENDING)])
+    if last_user:
+        new_user_id = last_user['user_id'] + 1
+    else:
+        new_user_id = 1  # Primeiro ID caso não haja documentos
+
+    data['user_id'] = new_user_id  # Adiciona o novo ID ao documento
     
     # Add or update timestamps
     now = datetime.utcnow()
@@ -69,38 +78,28 @@ def store_data(data):
         result = collection.update_one(
             {'numero_wpp': numero_wpp},  # Filter to find the document
             {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Data to update/add
-            upsert=True  # If not found, insert a new document
+            upsert=True  # If not found, insert a new doc
         )
-        
-        # Update RAW_DATA separately to avoid overwriting during upsert
-        if existing_document:
-            result = collection.update_one(
-                {'numero_wpp': numero_wpp},
-                {'$set': {'RAW_DATA': raw_data_to_store}}
-            )
-        
-        logging.info(f"Document updated/inserted successfully: {result}")
-        return {'status': 'Data stored successfully'}, 200
-    except errors.PyMongoError as e:
-        logging.error(f"Failed to store data in MongoDB: {e}")
-        return {'error': 'Failed to store data'}, 500
 
-
-def get_data(numero_wpp):
-    try:
-        document = collection.find_one({'numero_wpp': numero_wpp})
-        if not document:
-            logging.warning(f"No document found with numero_wpp: {numero_wpp}")
-            return {'error': 'Document not found'}, 404
-
-        # Convert ObjectId to string
-        document['_id'] = str(document['_id'])
+        if result.modified_count or result.upserted_id:
+            logging.info(f"Data stored successfully for {numero_wpp}")
+        else:
+            logging.warning(f"No changes made to the data for {numero_wpp}")
         
-        logging.info(f"Document retrieved successfully: {document}")
-        return document, 200
-    except errors.PyMongoError as e:
-        logging.error(f"Failed to retrieve data from MongoDB: {e}")
-        return {'error': 'Failed to retrieve data'}, 500
+        # Chame a função para salvar o PDF e fazer o upload após o armazenamento no banco de dados
+        try:
+            pdf_path = save_data_as_pdf_and_upload(data, deal_id="DEAL_ID_AQUI", person_id="PERSON_ID_AQUI", org_id="ORG_ID_AQUI")
+            logging.info(f"PDF gerado e carregado com sucesso em: {pdf_path}")
+        except Exception as e:
+            logging.error(f"Erro ao gerar e enviar o PDF: {e}")
+            return {'error': 'Erro ao gerar e enviar o PDF'}, 500
+
+        return {'message': 'Data stored successfully'}, 200
+    
+    except Exception as e:
+        logging.error(f"Error while storing data: {e}")
+        return {'error': 'Error while storing data'}, 500
+        
 
 def get_all_data():
     try:
