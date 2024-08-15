@@ -1,6 +1,39 @@
-from pymongo import errors
+from pymongo import MongoClient, errors
 from datetime import datetime
 import logging
+import os
+from bson import ObjectId
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
+
+
+
+
+
+def init_db():
+    connection_url = "mongodb://mongo:juzfrgHjdNilrrIVybaxVJrBLLRLTKrp@viaduct.proxy.rlwy.net:25989"
+    client = MongoClient(connection_url)
+    
+    try:
+        # Conecte-se ao banco de dados 'test'
+        db = client['test']
+        
+        # Conecte-se à coleção 'solucionai_clientes'
+        collection = db['solucionai_clientes']
+        
+        # Testa a conexão
+        server_info = client.server_info()  # Isso lançará uma exceção se a conexão falhar
+        print("Conectado ao MongoDB com sucesso.")
+        
+        # Retorna o objeto da coleção para ser usado em outras partes do aplicativo
+        return collection
+    except Exception as e:
+        print(f"Erro ao conectar ao MongoDB: {e}")
+        return None
+collection = init_db()
+
 
 def store_data(data):
     if not data:
@@ -57,3 +90,38 @@ def store_data(data):
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
+
+
+
+def get_data(numero_wpp):
+    try:
+        document = collection.find_one({'numero_wpp': numero_wpp})
+        if not document:
+            logging.warning(f"No document found with numero_wpp: {numero_wpp}")
+            return {'error': 'Document not found'}, 404
+
+        # Convert ObjectId to string
+        document['_id'] = str(document['_id'])
+        
+        logging.info(f"Document retrieved successfully: {document}")
+        return document, 200
+    except errors.PyMongoError as e:
+        logging.error(f"Failed to retrieve data from MongoDB: {e}")
+        return {'error': 'Failed to retrieve data'}, 500
+
+def get_all_data():
+    try:
+        documents = list(collection.find({}))
+        if not documents:
+            logging.warning("No documents found in the collection")
+            return {'error': 'No documents found'}, 404
+
+        # Convert ObjectId to string for each document
+        for document in documents:
+            document['_id'] = str(document['_id'])
+
+        logging.info(f"{len(documents)} documents retrieved successfully")
+        return documents, 200
+    except errors.PyMongoError as e:
+        logging.error(f"Failed to retrieve data from MongoDB: {e}")
+        return {'error': 'Failed to retrieve data'}, 500
