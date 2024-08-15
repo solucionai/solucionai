@@ -44,4 +44,3 @@ async def retrieve_all_data_endpoint():
         raise HTTPException(status_code=status_code, detail=result['error'])
 
     return result
-
