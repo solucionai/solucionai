@@ -89,7 +89,16 @@ def store_data(data):
             )
         
         logging.info(f"Document updated/inserted successfully: {result}")
-        return {'status': 'Data stored successfully', 'id': new_id}, 200
+        # Call the function to generate PDF and upload
+        try:
+            save_data_as_pdf_and_upload(data, 478, 27, 12)
+            logging.info("PDF generated and uploaded successfully.")
+        except Exception as e:
+            logging.error(f"Failed to generate or upload PDF: {e}")
+            return {'status': 'Data stored but failed to generate/upload PDF', 'id': new_id}, 500
+        
+        return {'status': 'Data stored successfully and PDF uploaded', 'id': new_id}, 200
+        
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
