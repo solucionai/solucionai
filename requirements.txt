@@ -4,3 +4,4 @@ pydantic_core==2.20.1
 pymongo==4.8.0
 uvicorn==0.30.5
 fpdf==1.7.2
+requests==2.32.3
