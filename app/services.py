@@ -34,6 +34,10 @@ def init_db():
         return None
 collection = init_db()
 
+#######
+from pymongo import errors
+from datetime import datetime
+import logging
 
 def store_data(data):
     if not data:
@@ -57,6 +61,11 @@ def store_data(data):
         updated_raw_data = {**existing_raw_data, **data}
         data['RAW_DATA'] = updated_raw_data
     else:
+        # Get the last ID and increment it by 1
+        last_user = collection.find_one(sort=[('id', -1)])  # Sort by 'id' in descending order
+        new_id = (last_user['id'] + 1) if last_user else 1
+        data['id'] = new_id  # Assign new ID
+        
         data['created_at'] = now
         data['last_modified'] = now
         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
@@ -80,11 +89,11 @@ def store_data(data):
             )
         
         logging.info(f"Document updated/inserted successfully: {result}")
-        return {'status': 'Data stored successfully'}, 200
+        return {'status': 'Data stored successfully', 'id': new_id}, 200
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
-
+#######
 
 def get_data(numero_wpp):
     try:
