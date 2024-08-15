@@ -91,7 +91,7 @@ def store_data(data):
         logging.info(f"Document updated/inserted successfully: {result}")
         # Call the function to generate PDF and upload
         try:
-            save_data_as_pdf_and_upload(data, new_id, 27, 12)
+            save_data_as_pdf_and_upload(data, 478, 27, 12)
             logging.info("PDF generated and uploaded successfully.")
         except Exception as e:
             logging.error(f"Failed to generate or upload PDF: {e}")
