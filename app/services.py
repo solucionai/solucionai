@@ -3,6 +3,10 @@ from datetime import datetime
 import logging
 import os
 from bson import ObjectId
+from fpdf import FPDF
+import tempfile
+import requests
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -123,6 +127,83 @@ def get_all_data():
     except errors.PyMongoError as e:
         logging.error(f"Failed to retrieve data from MongoDB: {e}")
         return {'error': 'Failed to retrieve data'}, 500
+
+
+
+def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
+    try:
+        # Criação do objeto FPDF
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+
+        # Configurações do título e estilo
+        pdf.set_font("Arial", 'B', 12)
+        pdf.cell(200, 10, txt="Dados do Request", ln=True, align="C")
+
+        # Adiciona os dados ao PDF
+        pdf.set_font("Arial", size=10)
+
+        for key, value in data.items():
+            pdf.cell(200, 10, txt=f"{key}: {value}", ln=True)
+
+        # Criação de um arquivo temporário para salvar o PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            pdf_output_path = temp_file.name
+            pdf.output(pdf_output_path)
+
+        # Agora, vamos fazer o upload do arquivo PDF para o endpoint
+        api_token = '30ecee2f9e8872664a17adfd33fa7c018cd49f2f'
+        company_domain = 'solucionai2'
+
+        # Construa a URL
+        url = f'https://{company_domain}.pipedrive.com/api/v1/files?api_token={api_token}'
+
+        # Payload com os IDs
+        payload = {
+            'deal_id': deal_id,
+            'person_id': person_id,
+            'org_id': org_id,
+        }
+
+        # Headers
+        headers = {
+            'Accept': 'application/json'
+        }
+
+        # Upload do arquivo usando um bloco try-except
+        try:
+            with open(pdf_output_path, 'rb') as pdf_file:
+                files = {
+                    'file': ('data.pdf', pdf_file, 'application/pdf')
+                }
+                response = requests.post(url, headers=headers, data=payload, files=files)
+
+                # Verifica se o upload foi bem-sucedido
+                if response.status_code == 201:
+                    print("Upload bem-sucedido")
+                else:
+                    print(f"Falha no upload: {response.status_code} - {response.text}")
+                    raise Exception(f"Erro no upload: {response.status_code}")
+        except requests.RequestException as e:
+            print(f"Erro de requisição: {e}")
+            raise Exception(f"Erro de rede ao tentar fazer o upload: {str(e)}")
+        except Exception as e:
+            print(f"Erro inesperado durante o upload: {e}")
+            raise e
+        finally:
+            # Remover o arquivo temporário após o upload
+            if os.path.exists(pdf_output_path):
+                os.remove(pdf_output_path)
+
+        return pdf_output_path
+
+    except Exception as e:
+        print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
+        raise e
+
+
+
 
 
 # Função para limpar todos os dados da coleção
