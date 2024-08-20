@@ -174,7 +174,8 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
             'person_id': person_id,
             'org_id': org_id,
         }
-
+        print('*******')
+        print(deal_id)
         # Headers
         headers = {
             'Accept': 'application/json'
