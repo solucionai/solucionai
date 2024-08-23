@@ -214,7 +214,7 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id=19, org_id=12):
 
         # Payload com os IDs
         payload = {
-            'deal_id': deal_id,
+            'deal_id': 18,
             'person_id': person_id,
             'org_id': org_id,
         }
