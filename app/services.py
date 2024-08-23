@@ -65,20 +65,22 @@ def store_data(data):
 
     numero_wpp = data.get('numero_wpp')
     problema = data.get('PROBLEMA')
-    
+
     if not numero_wpp:
         logging.warning('Field "numero_wpp" is required in the request')
         return {'error': 'Field "numero_wpp" is required'}, 400
-    
+
     if not problema:
         logging.warning('Field "PROBLEMA" is required in the request')
         return {'error': 'Field "PROBLEMA" is required'}, 400
 
     now = datetime.utcnow()
-    
+
     # Check if a document with the same numero_wpp and PROBLEMA exists
     existing_document = collection.find_one({'numero_wpp': numero_wpp, 'PROBLEMA': problema})
     
+    new_id = None  # Initialize new_id to avoid reference error
+
     if existing_document:
         # If it exists, update the existing document
         data['last_modified'] = now
@@ -90,7 +92,7 @@ def store_data(data):
         # If not, count total documents to set new deal_id
         total_documents = collection.count_documents({})
         deal_id = total_documents + 1  # Calculate the deal_id based on the total number of documents
-        
+
         # Create a new document with the new deal_id
         data['deal_id'] = deal_id  # Set the new deal_id
         data['created_at'] = now
@@ -118,8 +120,10 @@ def store_data(data):
         if pipedrive_deal_id:
             data['pipedrive_deal_id'] = pipedrive_deal_id
 
+        new_id = deal_id  # Assign deal_id to new_id for new documents
+
     raw_data_to_store = data.pop('RAW_DATA')
-    
+
     try:
         # Upsert logic based on whether the document already exists
         result = collection.update_one(
@@ -135,7 +139,7 @@ def store_data(data):
             )
         
         logging.info(f"Document updated/inserted successfully: {result}")
-        
+
         # Call the function to generate PDF and upload
         try:
             save_data_as_pdf_and_upload(data, new_id)
@@ -143,12 +147,13 @@ def store_data(data):
         except Exception as e:
             logging.error(f"Failed to generate or upload PDF: {e}")
             return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id if existing_document else deal_id}, 500
-        
+
         return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id if existing_document else deal_id}, 200
-        
+
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
+
 
 
 
