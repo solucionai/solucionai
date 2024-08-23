@@ -91,7 +91,7 @@ def store_data(data):
     else:
         # If not, count total documents to set new deal_id
         total_documents = collection.count_documents({})
-        deal_id = total_documents + 28  # Calculate the deal_id based on the total number of documents
+        deal_id = total_documents + 30  # Calculate the deal_id based on the total number of documents
 
         # Create a new document with the new deal_id
         data['deal_id'] = deal_id  # Set the new deal_id
