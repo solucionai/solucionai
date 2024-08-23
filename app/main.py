@@ -46,6 +46,16 @@ async def retrieve_all_data_endpoint():
 
     return result
 
+
+@app.route('/add_data', methods=['POST'])
+def upload_xlsx():
+    if 'file' not in request.files:
+        return jsonify({"error": "Nenhum arquivo foi enviado"}), 400
+
+    file = request.files['file']
+    return add_data_from_xlsx(file)
+
+
 @app.delete("/clear_db")
 async def clear_db_endpoint():
     result, status_code = clear_data()  # Chamando a função de limpar o banco de dados
