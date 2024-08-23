@@ -12,6 +12,9 @@ import requests
 logging.basicConfig(level=logging.INFO)
 
 
+API_TOKEN = 'bbdd39fba4dab68ac0c03f4a629680f7429478ff'
+COMPANY_DOMAIN = 'solucionai'
+PIPEDRIVE_URL = f'https://{COMPANY_DOMAIN}.pipedrive.com/api/v1/deals?api_token={API_TOKEN}'
 
 
 
