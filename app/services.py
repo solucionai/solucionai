@@ -38,6 +38,23 @@ def init_db():
         return None
 collection = init_db()
 
+def create_pipedrive_deal(deal):
+    try:
+        response = requests.post(PIPEDRIVE_URL, json=deal)
+        response.raise_for_status()
+        response_data = response.json()
+        
+        if response_data.get('success'):
+            logging.info(f"Deal was added successfully: {response_data}")
+            return response_data['data']['id']
+        else:
+            logging.error(f"Failed to add deal: {response_data}")
+            return None
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request to Pipedrive API failed: {e}")
+        return None
+
+
 def store_data(data):
     if not data:
         logging.warning("No data provided in the request")
@@ -76,6 +93,27 @@ def store_data(data):
         data['created_at'] = now
         data['last_modified'] = now
         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
+
+        # Create a new deal in Pipedrive
+        deal = {
+            'title': f'Deal for {numero_wpp}',
+            'org_id': None,  # Optional: If you have an organization ID
+            'value': 10000,  # Example value, you may want to customize this
+            'currency': 'USD',
+            'user_id': None,
+            'person_id': None,  # You can pass the user ID if available
+            'stage_id': 1,  # Customize stage ID based on your pipeline
+            'status': 'open',
+            'expected_close_date': now.strftime('%Y-%m-%d'),
+            'probability': 60,
+            'lost_reason': None,
+            'visible_to': 1,
+            'add_time': now.strftime('%Y-%m-%d')
+        }
+
+        pipedrive_deal_id = create_pipedrive_deal(deal)
+        if pipedrive_deal_id:
+            data['pipedrive_deal_id'] = pipedrive_deal_id
 
     raw_data_to_store = data.pop('RAW_DATA')
     
