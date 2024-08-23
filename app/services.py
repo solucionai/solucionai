@@ -44,64 +44,71 @@ def store_data(data):
         return {'error': 'No data provided'}, 400
 
     numero_wpp = data.get('numero_wpp')
+    problema = data.get('PROBLEMA')
     
     if not numero_wpp:
         logging.warning('Field "numero_wpp" is required in the request')
         return {'error': 'Field "numero_wpp" is required'}, 400
     
-    # Add or update timestamps
+    if not problema:
+        logging.warning('Field "PROBLEMA" is required in the request')
+        return {'error': 'Field "PROBLEMA" is required'}, 400
+
     now = datetime.utcnow()
-    existing_document = collection.find_one({'numero_wpp': numero_wpp})
+    
+    # Check if a document with the same numero_wpp and PROBLEMA exists
+    existing_document = collection.find_one({'numero_wpp': numero_wpp, 'PROBLEMA': problema})
     
     if existing_document:
+        # If it exists, update the existing document
         data['last_modified'] = now
-        # Update RAW_DATA with existing data and new data
         existing_raw_data = existing_document.get('RAW_DATA', {})
         updated_raw_data = {**existing_raw_data, **data}
         data['RAW_DATA'] = updated_raw_data
         new_id = existing_document.get('id')  # Use the existing id for return
     else:
-        # Get the last ID and increment it by 1
-        last_user = collection.find_one(sort=[('id', -1)])  # Sort by 'id' in descending order
-        new_id = (last_user['id'] + 1) if last_user else 1  # Assign new ID if there are no users
-        data['id'] = new_id  # Assign the new ID to the data
+        # If not, count total documents to set new deal_id
+        total_documents = collection.count_documents({})
+        deal_id = total_documents + 1  # Calculate the deal_id based on the total number of documents
         
+        # Create a new document with the new deal_id
+        data['deal_id'] = deal_id  # Set the new deal_id
         data['created_at'] = now
         data['last_modified'] = now
         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
-    
-    # Remove 'RAW_DATA' from the main data to avoid duplication
+
     raw_data_to_store = data.pop('RAW_DATA')
     
-    # Update or insert document
     try:
+        # Upsert logic based on whether the document already exists
         result = collection.update_one(
-            {'numero_wpp': numero_wpp},  # Filter to find the document
-            {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Data to update/add
-            upsert=True  # If not found, insert a new document
+            {'numero_wpp': numero_wpp, 'PROBLEMA': problema},  # Filter by numero_wpp and PROBLEMA
+            {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Update or insert RAW_DATA
+            upsert=True  # Insert a new document if no match is found
         )
         
-        # Update RAW_DATA separately to avoid overwriting during upsert
         if existing_document:
             result = collection.update_one(
-                {'numero_wpp': numero_wpp},
+                {'numero_wpp': numero_wpp, 'PROBLEMA': problema},
                 {'$set': {'RAW_DATA': raw_data_to_store}}
             )
         
         logging.info(f"Document updated/inserted successfully: {result}")
+        
         # Call the function to generate PDF and upload
         try:
-            save_data_as_pdf_and_upload(data, new_id, 27, 12)
+            save_data_as_pdf_and_upload(data, new_id if existing_document else deal_id, 27, 12)
             logging.info("PDF generated and uploaded successfully.")
         except Exception as e:
             logging.error(f"Failed to generate or upload PDF: {e}")
-            return {'status': 'Data stored but failed to generate/upload PDF', 'id': new_id}, 500
+            return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id if existing_document else deal_id}, 500
         
-        return {'status': 'Data stored successfully and PDF uploaded', 'id': new_id}, 200
+        return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id if existing_document else deal_id}, 200
         
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
+
 
 
 def get_data(numero_wpp):
