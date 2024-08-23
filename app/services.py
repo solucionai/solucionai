@@ -194,6 +194,7 @@ def get_all_data():
 
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
+        print(deal_id)
         # Criação do objeto FPDF
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
