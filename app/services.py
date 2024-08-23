@@ -214,6 +214,31 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
 
 
 
+# Função para adicionar dados a partir de um arquivo XLSX
+def add_data_from_xlsx(file):
+    try:
+        # Inicializa a conexão com a coleção
+        collection = init_db()
+
+        # Faz o upload do arquivo e lê o conteúdo usando pandas
+        file_path = secure_filename(file.filename)
+        file.save(file_path)
+        
+        # Lê o arquivo XLSX em um DataFrame do pandas
+        data = pd.read_excel(file_path)
+        
+        # Converte o DataFrame em uma lista de dicionários para inserir no MongoDB
+        records = data.to_dict(orient='records')
+
+        # Insere os dados na coleção MongoDB
+        result = collection.insert_many(records)
+        
+        return {"message": f"{len(result.inserted_ids)} documentos adicionados com sucesso."}, 200
+    except Exception as e:
+        # Retorna uma mensagem de erro em caso de exceção
+        return {"error": str(e)}, 500
+
+
 
 
 # Função para limpar todos os dados da coleção
