@@ -213,8 +213,9 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
         api_token = '30ecee2f9e8872664a17adfd33fa7c018cd49f2f'
         company_domain = 'solucionai2'
 
+
         # Construa a URL
-        url = f'https://{company_domain}.pipedrive.com/api/v1/files?api_token={api_token}'
+        url = f'https://{COMPANY_DOMAIN}.pipedrive.com/api/v1/files?api_token={API_TOKEN}'
 
         # Payload com os IDs
         payload = {
