@@ -117,7 +117,6 @@ def store_data(data):
         pipedrive_deal_id = create_pipedrive_deal(deal)
         if pipedrive_deal_id:
             data['pipedrive_deal_id'] = pipedrive_deal_id
-            print('*** DEAL ID NO SAVE', data['pipedrive_deal_id'])
 
     raw_data_to_store = data.pop('RAW_DATA')
     
@@ -191,7 +190,6 @@ def get_all_data():
 def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
     try:
         # Criação do objeto FPDF
-        print('dealid no save pdf:',deal_id)
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
@@ -224,7 +222,8 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
             'person_id': person_id,
             'org_id': org_id,
         }
-       
+        print('*******')
+        print(deal_id)
         # Headers
         headers = {
             'Accept': 'application/json'
@@ -240,7 +239,7 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
 
                 # Verifica se o upload foi bem-sucedido
                 if response.status_code == 201:
-                    
+                    print("Upload bem-sucedido")
                 else:
                     print(f"Falha no upload: {response.status_code} - {response.text}")
                     raise Exception(f"Erro no upload: {response.status_code}")
