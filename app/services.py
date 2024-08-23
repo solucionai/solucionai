@@ -216,7 +216,7 @@ def save_data_as_pdf_and_upload(data, deal_id):
         payload = {
             'deal_id': 18,
             'person_id': 19,
-            'org_id': org_id,
+            'org_id': 12,
         }
 
         # Headers
