@@ -138,7 +138,7 @@ def store_data(data):
         
         # Call the function to generate PDF and upload
         try:
-            save_data_as_pdf_and_upload(data, new_id if existing_document else deal_id, 27, 12)
+            save_data_as_pdf_and_upload(data, new_id)
             logging.info("PDF generated and uploaded successfully.")
         except Exception as e:
             logging.error(f"Failed to generate or upload PDF: {e}")
@@ -187,7 +187,7 @@ def get_all_data():
 
 
 
-def save_data_as_pdf_and_upload(data, deal_id, person_id=19, org_id=12):
+def save_data_as_pdf_and_upload(data, deal_id):
     try:
         # Criação do objeto FPDF
         pdf = FPDF()
@@ -215,7 +215,7 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id=19, org_id=12):
         # Payload com os IDs
         payload = {
             'deal_id': 18,
-            'person_id': person_id,
+            'person_id': 19,
             'org_id': org_id,
         }
 
