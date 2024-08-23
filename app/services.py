@@ -187,7 +187,7 @@ def get_all_data():
 
 
 
-def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
+def save_data_as_pdf_and_upload(data, deal_id, person_id=19, org_id=12):
     try:
         # Criação do objeto FPDF
         pdf = FPDF()
@@ -209,22 +209,16 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
             pdf_output_path = temp_file.name
             pdf.output(pdf_output_path)
 
-        # Agora, vamos fazer o upload do arquivo PDF para o endpoint
-        api_token = '30ecee2f9e8872664a17adfd33fa7c018cd49f2f'
-        company_domain = 'solucionai2'
-
-
         # Construa a URL
         url = f'https://{COMPANY_DOMAIN}.pipedrive.com/api/v1/files?api_token={API_TOKEN}'
 
         # Payload com os IDs
         payload = {
-            'deal_id': 18,
+            'deal_id': deal_id,
             'person_id': person_id,
             'org_id': org_id,
         }
-        print('*******')
-        print(deal_id)
+
         # Headers
         headers = {
             'Accept': 'application/json'
@@ -260,8 +254,6 @@ def save_data_as_pdf_and_upload(data, deal_id, person_id, org_id):
     except Exception as e:
         print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
         raise e
-
-
 
 # Função para adicionar dados a partir de um arquivo XLSX
 def add_data_from_xlsx(file):
