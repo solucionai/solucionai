@@ -57,7 +57,6 @@ def create_pipedrive_deal(deal):
         logging.error(f"Request to Pipedrive API failed: {e}")
         return None
 
-
 def store_data(data):
     if not data:
         logging.warning("No data provided in the request")
@@ -82,12 +81,17 @@ def store_data(data):
     new_id = None  # Initialize new_id to avoid reference error
 
     if existing_document:
+        # Recalculate the deal_id for existing documents
+        total_documents = collection.count_documents({})
+        deal_id = total_documents + 30  # Calculate the deal_id based on the total number of documents
+        
         # If it exists, update the existing document
         data['last_modified'] = now
         existing_raw_data = existing_document.get('RAW_DATA', {})
         updated_raw_data = {**existing_raw_data, **data}
         data['RAW_DATA'] = updated_raw_data
-        new_id = existing_document.get('id')  # Use the existing id for return
+        data['deal_id'] = deal_id  # Set the recalculated deal_id for the existing document
+        new_id = deal_id  # Use the recalculated deal_id for return
     else:
         # If not, count total documents to set new deal_id
         total_documents = collection.count_documents({})
@@ -146,13 +150,14 @@ def store_data(data):
             logging.info("PDF generated and uploaded successfully.")
         except Exception as e:
             logging.error(f"Failed to generate or upload PDF: {e}")
-            return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id if existing_document else deal_id}, 500
+            return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id}, 500
 
-        return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id if existing_document else deal_id}, 200
+        return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id}, 200
 
     except errors.PyMongoError as e:
         logging.error(f"Failed to store data in MongoDB: {e}")
         return {'error': 'Failed to store data'}, 500
+
 
 
 
