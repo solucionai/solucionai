@@ -83,7 +83,7 @@ def store_data(data):
     if existing_document:
         # Recalculate the deal_id for existing documents
         total_documents = collection.count_documents({})
-        deal_id = total_documents + 30  # Calculate the deal_id based on the total number of documents
+        deal_id = total_documents + 29  # Calculate the deal_id based on the total number of documents
         
         # If it exists, update the existing document
         data['last_modified'] = now
