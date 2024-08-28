@@ -200,7 +200,7 @@ def get_all_data():
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
         # Lista de campos a serem excluídos (hardcode)
-        fields_to_exclude = ['outros_campos']
+        fields_to_exclude = ['outros_campos','deal_id','pipedrive_deal_id']
 
         # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
         filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
@@ -212,7 +212,7 @@ def save_data_as_pdf_and_upload(data, deal_id):
 
         # Configurações do título e estilo
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(200, 10, txt="Dados do Request", ln=True, align="C")
+        pdf.cell(200, 10, txt=f"Dados do {deal_id}", ln=True, align="C")
         pdf.ln(10)  # Adiciona espaço extra entre o título e o conteúdo
 
         # Adiciona os dados filtrados ao PDF
