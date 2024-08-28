@@ -200,7 +200,7 @@ def get_all_data():
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
         # Lista de campos a serem excluídos (hardcode)
-        fields_to_exclude = ['outros_campos','deal_id','pipedrive_deal_id']
+        fields_to_exclude = ['outros_campos', 'deal_id', 'pipedrive_deal_id']
 
         # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
         filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
@@ -218,21 +218,26 @@ def save_data_as_pdf_and_upload(data, deal_id):
         # Adiciona os dados filtrados ao PDF
         pdf.set_font("Arial", size=12)
 
+        # Definir o limite máximo de caracteres para campo e valor em uma linha
+        max_field_width = 60  # Largura máxima para o nome do campo
+
         # Formatação do conteúdo com espaço fixo para os nomes dos campos
         for key, value in filtered_data.items():
             # Ajuste de título e valor
             pdf.set_font("Arial", 'B', 12)
             
-            # Se o campo for muito longo, mova o valor para a linha abaixo
-            if len(key) > 30:
-                # Quebra a linha para o campo longo
-                pdf.multi_cell(0, 10, txt=f"{key}:")
-                pdf.set_font("Arial", size=12)
-                pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+            # Se o campo for maior que o limite, usa multi_cell para quebrar em várias linhas
+            if pdf.get_string_width(key) > max_field_width:
+                pdf.multi_cell(0, 10, txt=f"{key}:", align="L")
             else:
                 # Campo e valor na mesma linha com margem para o valor
-                pdf.cell(50, 10, txt=f"{key}:", ln=False)  # Define um limite fixo para o campo
-                pdf.set_font("Arial", size=12)
+                pdf.cell(max_field_width, 10, txt=f"{key}:", ln=False)  # Limite fixo para o campo
+
+            # Adicionar o valor, se muito longo, quebrar em várias linhas
+            pdf.set_font("Arial", size=12)
+            if isinstance(value, str) and pdf.get_string_width(value) > (200 - max_field_width):
+                pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+            else:
                 pdf.cell(0, 10, txt=f"{value}", ln=True)
 
             pdf.ln(5)  # Adiciona um pequeno espaço entre cada par chave/valor
@@ -287,6 +292,7 @@ def save_data_as_pdf_and_upload(data, deal_id):
     except Exception as e:
         print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
         raise e
+
 
 
 
