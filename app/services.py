@@ -107,14 +107,14 @@ def store_data(data):
         deal = {
             'title': f'problema - {numero_wpp}',
             'org_id': None,  # Optional: If you have an organization ID
-            'value': 10000,  # Example value, you may want to customize this
-            'currency': 'USD',
+            'value': 4500,  # Example value, you may want to customize this
+            'currency': 'BRL',
             'user_id': None,
             'person_id': None,  # You can pass the user ID if available
             'stage_id': 1,  # Customize stage ID based on your pipeline
             'status': 'open',
             'expected_close_date': now.strftime('%Y-%m-%d'),
-            'probability': 60,
+            'probability': 30,
             'lost_reason': None,
             'visible_to': 1,
             'add_time': now.strftime('%Y-%m-%d')
@@ -226,7 +226,7 @@ def save_data_as_pdf_and_upload(data, deal_id):
         # Payload com os IDs
         payload = {
             'deal_id': deal_id,
-            'person_id': 19,
+            'person_id': None,
             'org_id': 12,
         }
 
