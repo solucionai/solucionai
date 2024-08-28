@@ -105,8 +105,8 @@ def store_data(data):
 
         # Create a new deal in Pipedrive
         deal = {
-            'title': f'problema - {numero_wpp}',
-            'org_id': None,  # Optional: If you have an organization ID
+            'title': f'{deal_id} - {problema} - {numero_wpp}',
+            'org_id': 12,  # Optional: If you have an organization ID
             'value': 4500,  # Example value, you may want to customize this
             'currency': 'BRL',
             'user_id': None,
