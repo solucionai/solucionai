@@ -197,13 +197,14 @@ def get_all_data():
 
 
 
-from fpdf import FPDF
-import tempfile
-import os
-import requests
-
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
+        # Lista de campos a serem excluídos (hardcode)
+        fields_to_exclude = ['outros_campos']
+
+        # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
+        filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
+
         # Criação do objeto FPDF
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
@@ -214,24 +215,25 @@ def save_data_as_pdf_and_upload(data, deal_id):
         pdf.cell(200, 10, txt="Dados do Request", ln=True, align="C")
         pdf.ln(10)  # Adiciona espaço extra entre o título e o conteúdo
 
-        # Adiciona os dados ao PDF
+        # Adiciona os dados filtrados ao PDF
         pdf.set_font("Arial", size=12)
 
-        # Formatação do conteúdo
-        for key, value in data.items():
-            # Título em negrito
+        # Formatação do conteúdo com espaço fixo para os nomes dos campos
+        for key, value in filtered_data.items():
+            # Ajuste de título e valor
             pdf.set_font("Arial", 'B', 12)
-            pdf.cell(40, 10, txt=f"{key}:", ln=False)
-
-            # Valor normal
-            pdf.set_font("Arial", size=12)
             
-            # Tratamento para valores longos (textos grandes ou JSONs)
-            if isinstance(value, (list, dict)):
-                value = str(value)  # Converte em string para manter no formato JSON
-                
-            # Quebra de texto se for muito longo
-            wrapped_value = pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+            # Se o campo for muito longo, mova o valor para a linha abaixo
+            if len(key) > 30:
+                # Quebra a linha para o campo longo
+                pdf.multi_cell(0, 10, txt=f"{key}:")
+                pdf.set_font("Arial", size=12)
+                pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+            else:
+                # Campo e valor na mesma linha com margem para o valor
+                pdf.cell(50, 10, txt=f"{key}:", ln=False)  # Define um limite fixo para o campo
+                pdf.set_font("Arial", size=12)
+                pdf.cell(0, 10, txt=f"{value}", ln=True)
 
             pdf.ln(5)  # Adiciona um pequeno espaço entre cada par chave/valor
 
