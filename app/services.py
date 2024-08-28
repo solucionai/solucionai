@@ -197,23 +197,43 @@ def get_all_data():
 
 
 
+from fpdf import FPDF
+import tempfile
+import os
+import requests
+
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
-        print(deal_id)
         # Criação do objeto FPDF
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
 
         # Configurações do título e estilo
-        pdf.set_font("Arial", 'B', 12)
+        pdf.set_font("Arial", 'B', 16)
         pdf.cell(200, 10, txt="Dados do Request", ln=True, align="C")
+        pdf.ln(10)  # Adiciona espaço extra entre o título e o conteúdo
 
         # Adiciona os dados ao PDF
-        pdf.set_font("Arial", size=10)
+        pdf.set_font("Arial", size=12)
 
+        # Formatação do conteúdo
         for key, value in data.items():
-            pdf.cell(200, 10, txt=f"{key}: {value}", ln=True)
+            # Título em negrito
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(40, 10, txt=f"{key}:", ln=False)
+
+            # Valor normal
+            pdf.set_font("Arial", size=12)
+            
+            # Tratamento para valores longos (textos grandes ou JSONs)
+            if isinstance(value, (list, dict)):
+                value = str(value)  # Converte em string para manter no formato JSON
+                
+            # Quebra de texto se for muito longo
+            wrapped_value = pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+
+            pdf.ln(5)  # Adiciona um pequeno espaço entre cada par chave/valor
 
         # Criação de um arquivo temporário para salvar o PDF
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
@@ -265,6 +285,8 @@ def save_data_as_pdf_and_upload(data, deal_id):
     except Exception as e:
         print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
         raise e
+
+
 
 # Função para adicionar dados a partir de um arquivo XLSX
 def add_data_from_xlsx(file):
