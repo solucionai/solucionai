@@ -148,6 +148,8 @@ def store_data(data):
         
         logging.info(f"Document updated/inserted successfully: {result}")
 
+        data = raw_data_to_store
+        
         # Call the function to generate PDF and upload
         try:
             save_data_as_pdf_and_upload(data, new_id)
