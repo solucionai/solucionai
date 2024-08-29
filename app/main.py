@@ -21,6 +21,7 @@ class DataModel(BaseModel):
 @app.post("/store")
 async def store_data_endpoint(data: DataModel):
     result, status_code = store_data(data.dict())
+    print(data)
     
     if status_code != 200:
         raise HTTPException(status_code=status_code, detail=result['error'])
