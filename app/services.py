@@ -84,6 +84,8 @@ def store_data(data):
         # Recalculate the deal_id for existing documents
         total_documents = collection.count_documents({})
         deal_id = total_documents + 29  # Calculate the deal_id based on the total number of documents
+
+        print('data existing document', data)
         
         # If it exists, update the existing document
         data['last_modified'] = now
@@ -103,6 +105,8 @@ def store_data(data):
         data['last_modified'] = now
         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
 
+        print('data copy:', data)
+        
         # Create a new deal in Pipedrive
         deal = {
             'title': f'{deal_id} - {problema} - {numero_wpp}',
