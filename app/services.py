@@ -202,6 +202,8 @@ def save_data_as_pdf_and_upload(data, deal_id):
         # Lista de campos a serem excluídos (hardcode)
         fields_to_exclude = ['outros_campos', 'deal_id', 'pipedrive_deal_id']
 
+        print(data)
+
         # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
         filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
 
