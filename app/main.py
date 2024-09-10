@@ -57,11 +57,11 @@ def upload_xlsx():
     return add_data_from_xlsx(file)
 
 
-@app.delete("/clear_db")
-async def clear_db_endpoint():
-    result, status_code = clear_data()  # Chamando a função de limpar o banco de dados
+# @app.delete("/clear_db")
+# async def clear_db_endpoint():
+#     result, status_code = clear_data()  # Chamando a função de limpar o banco de dados
 
-    if status_code != 200:
-        raise HTTPException(status_code=status_code, detail="Erro ao limpar o banco de dados.")
+#     if status_code != 200:
+#         raise HTTPException(status_code=status_code, detail="Erro ao limpar o banco de dados.")
     
-    return {"message": "Banco de dados limpo com sucesso!"}
+#     return {"message": "Banco de dados limpo com sucesso!"}
