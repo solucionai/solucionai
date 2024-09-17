@@ -111,7 +111,7 @@ def store_data(data):
         deal = {
             'title': f'{deal_id} - {problema} - {numero_wpp}',
             'org_id': 12,  # Optional: If you have an organization ID
-            'value': 4500,  # Example value, you may want to customize this
+            'value': 1500,  # Example value, you may want to customize this
             'currency': 'BRL',
             'user_id': None,
             'person_id': None,  # You can pass the user ID if available
