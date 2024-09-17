@@ -152,6 +152,7 @@ def store_data(data):
         
         # Call the function to generate PDF and upload
         try:
+            print(new_id)
             save_data_as_pdf_and_upload(data, new_id)
             logging.info("PDF generated and uploaded successfully.")
         except Exception as e:
