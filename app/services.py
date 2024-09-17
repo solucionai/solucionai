@@ -204,157 +204,103 @@ def get_all_data():
 
 
 
-# def save_data_as_pdf_and_upload(data, deal_id):
-#     try:
-#         # Lista de campos a serem excluídos (hardcode)
-#         fields_to_exclude = ['outros_campos', 'deal_id', 'pipedrive_deal_id']
-
-#         print(data)
-
-#         # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
-#         filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
-
-#         # Criação do objeto FPDF
-#         pdf = FPDF()
-#         pdf.set_auto_page_break(auto=True, margin=15)
-#         pdf.add_page()
-
-#         # Configurações do título e estilo
-#         pdf.set_font("Arial", 'B', 16)
-#         pdf.cell(200, 10, txt=f"Dados do {deal_id}", ln=True, align="C")
-#         pdf.ln(10)  # Adiciona espaço extra entre o título e o conteúdo
-
-#         # Adiciona os dados filtrados ao PDF
-#         pdf.set_font("Arial", size=12)
-
-#         # Definir o limite máximo de caracteres para campo e valor em uma linha
-#         max_field_width = 60  # Largura máxima para o nome do campo
-
-#         # Formatação do conteúdo com espaço fixo para os nomes dos campos
-#         for key, value in filtered_data.items():
-#             # Ajuste de título e valor
-#             pdf.set_font("Arial", 'B', 12)
-            
-#             # Se o campo for maior que o limite, usa multi_cell para quebrar em várias linhas
-#             if pdf.get_string_width(key) > max_field_width:
-#                 pdf.multi_cell(0, 10, txt=f"{key}:", align="L")
-#             else:
-#                 # Campo e valor na mesma linha com margem para o valor
-#                 pdf.cell(max_field_width, 10, txt=f"{key}:", ln=False)  # Limite fixo para o campo
-
-#             # Adicionar o valor, se muito longo, quebrar em várias linhas
-#             pdf.set_font("Arial", size=12)
-#             if isinstance(value, str) and pdf.get_string_width(value) > (200 - max_field_width):
-#                 pdf.multi_cell(0, 10, txt=f"{value}", align="L")
-#             else:
-#                 pdf.cell(0, 10, txt=f"{value}", ln=True)
-
-#             pdf.ln(5)  # Adiciona um pequeno espaço entre cada par chave/valor
-
-#         # Criação de um arquivo temporário para salvar o PDF
-#         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-#             pdf_output_path = temp_file.name
-#             pdf.output(pdf_output_path)
-
-#         # Construa a URL
-#         url = f'https://{COMPANY_DOMAIN}.pipedrive.com/api/v1/files?api_token={API_TOKEN}'
-
-#         # Payload com os IDs
-#         payload = {
-#             'deal_id': deal_id,
-#             'person_id': None,
-#             'org_id': 12,
-#         }
-
-#         # Headers
-#         headers = {
-#             'Accept': 'application/json'
-#         }
-
-#         # Upload do arquivo usando um bloco try-except
-#         try:
-#             with open(pdf_output_path, 'rb') as pdf_file:
-#                 files = {
-#                     'file': ('data.pdf', pdf_file, 'application/pdf')
-#                 }
-#                 response = requests.post(url, headers=headers, data=payload, files=files)
-
-#                 # Verifica se o upload foi bem-sucedido
-#                 if response.status_code == 201:
-#                     print("Upload bem-sucedido")
-#                 else:
-#                     print(f"Falha no upload: {response.status_code} - {response.text}")
-#                     raise Exception(f"Erro no upload: {response.status_code}")
-#         except requests.RequestException as e:
-#             print(f"Erro de requisição: {e}")
-#             raise Exception(f"Erro de rede ao tentar fazer o upload: {str(e)}")
-#         except Exception as e:
-#             print(f"Erro inesperado durante o upload: {e}")
-#             raise e
-#         finally:
-#             # Remover o arquivo temporário após o upload
-#             if os.path.exists(pdf_output_path):
-#                 os.remove(pdf_output_path)
-
-#         return pdf_output_path
-
-#     except Exception as e:
-#         print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
-#         raise e
 def save_data_as_pdf_and_upload(data, deal_id):
     try:
-        # Filtrar os campos para o PDF
+        # Lista de campos a serem excluídos (hardcode)
         fields_to_exclude = ['outros_campos', 'deal_id', 'pipedrive_deal_id']
+
+        print(data)
+
+        # Filtrar o dicionário para remover os campos que não devem aparecer no PDF
         filtered_data = {key: value for key, value in data.items() if key not in fields_to_exclude}
 
-        # Gerar o PDF
+        # Criação do objeto FPDF
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
+
+        # Configurações do título e estilo
         pdf.set_font("Arial", 'B', 16)
         pdf.cell(200, 10, txt=f"Dados do {deal_id}", ln=True, align="C")
-        pdf.ln(10)
+        pdf.ln(10)  # Adiciona espaço extra entre o título e o conteúdo
 
+        # Adiciona os dados filtrados ao PDF
+        pdf.set_font("Arial", size=12)
+
+        # Definir o limite máximo de caracteres para campo e valor em uma linha
+        max_field_width = 60  # Largura máxima para o nome do campo
+
+        # Formatação do conteúdo com espaço fixo para os nomes dos campos
         for key, value in filtered_data.items():
+            # Ajuste de título e valor
             pdf.set_font("Arial", 'B', 12)
-            if isinstance(value, str) and pdf.get_string_width(value) > 60:
-                pdf.multi_cell(0, 10, txt=f"{key}: {value}", align="L")
+            
+            # Se o campo for maior que o limite, usa multi_cell para quebrar em várias linhas
+            if pdf.get_string_width(key) > max_field_width:
+                pdf.multi_cell(0, 10, txt=f"{key}:", align="L")
             else:
-                pdf.cell(60, 10, txt=f"{key}: {value}", ln=True)
-            pdf.ln(5)
+                # Campo e valor na mesma linha com margem para o valor
+                pdf.cell(max_field_width, 10, txt=f"{key}:", ln=False)  # Limite fixo para o campo
 
-        # Salvar o PDF em um arquivo temporário
+            # Adicionar o valor, se muito longo, quebrar em várias linhas
+            pdf.set_font("Arial", size=12)
+            if isinstance(value, str) and pdf.get_string_width(value) > (200 - max_field_width):
+                pdf.multi_cell(0, 10, txt=f"{value}", align="L")
+            else:
+                pdf.cell(0, 10, txt=f"{value}", ln=True)
+
+            pdf.ln(5)  # Adiciona um pequeno espaço entre cada par chave/valor
+
+        # Criação de um arquivo temporário para salvar o PDF
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
             pdf_output_path = temp_file.name
             pdf.output(pdf_output_path)
 
-        # Upload para o Pipedrive
+        # Construa a URL
         url = f'https://{COMPANY_DOMAIN}.pipedrive.com/api/v1/files?api_token={API_TOKEN}'
-        payload = {'deal_id': deal_id, 'org_id': 12}
-        headers = {'Accept': 'application/json'}
 
-        with open(pdf_output_path, 'rb') as pdf_file:
-            files = {'file': ('data.pdf', pdf_file, 'application/pdf')}
-            response = requests.post(url, headers=headers, data=payload, files=files)
+        # Payload com os IDs
+        payload = {
+            'deal_id': deal_id,
+            'person_id': None,
+            'org_id': 12,
+        }
 
-            if response.status_code == 201:
-                print("Upload bem-sucedido")
-            else:
-                print(f"Falha no upload: {response.status_code} - {response.text}")
-                raise Exception(f"Erro no upload: {response.status_code}")
+        # Headers
+        headers = {
+            'Accept': 'application/json'
+        }
 
-    except requests.RequestException as e:
-        print(f"Erro de requisição: {e}")
-        raise Exception(f"Erro de rede ao tentar fazer o upload: {str(e)}")
+        # Upload do arquivo usando um bloco try-except
+        try:
+            with open(pdf_output_path, 'rb') as pdf_file:
+                files = {
+                    'file': ('data.pdf', pdf_file, 'application/pdf')
+                }
+                response = requests.post(url, headers=headers, data=payload, files=files)
+
+                # Verifica se o upload foi bem-sucedido
+                if response.status_code == 201:
+                    print("Upload bem-sucedido")
+                else:
+                    print(f"Falha no upload: {response.status_code} - {response.text}")
+                    raise Exception(f"Erro no upload: {response.status_code}")
+        except requests.RequestException as e:
+            print(f"Erro de requisição: {e}")
+            raise Exception(f"Erro de rede ao tentar fazer o upload: {str(e)}")
+        except Exception as e:
+            print(f"Erro inesperado durante o upload: {e}")
+            raise e
+        finally:
+            # Remover o arquivo temporário após o upload
+            if os.path.exists(pdf_output_path):
+                os.remove(pdf_output_path)
+
+        return pdf_output_path
+
     except Exception as e:
-        print(f"Erro inesperado durante o upload: {e}")
+        print(f"Ocorreu um erro ao criar ou enviar o PDF: {e}")
         raise e
-    finally:
-        # Remover o arquivo temporário
-        if os.path.exists(pdf_output_path):
-            os.remove(pdf_output_path)
-
-
 
 
 
