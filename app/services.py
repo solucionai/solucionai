@@ -57,8 +57,6 @@ def create_pipedrive_deal(deal):
         logging.error(f"Request to Pipedrive API failed: {e}")
         return None
 
-
-
 def store_data(data):
     if not data:
         logging.warning("No data provided in the request")
