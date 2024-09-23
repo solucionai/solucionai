@@ -57,78 +57,7 @@ def create_pipedrive_deal(deal):
         logging.error(f"Request to Pipedrive API failed: {e}")
         return None
 
-def store_data(data):
-    if not data:
-        logging.warning("No data provided in the request")
-        return {'error': 'No data provided'}, 400
 
-    numero_wpp = data.get('numero_wpp')
-    problema = data.get('PROBLEMA')
-
-    if not numero_wpp:
-        logging.warning('Field "numero_wpp" is required in the request')
-        return {'error': 'Field "numero_wpp" is required'}, 400
-
-    if not problema:
-        logging.warning('Field "PROBLEMA" is required in the request')
-        return {'error': 'Field "PROBLEMA" is required'}, 400
-
-    now = datetime.utcnow()
-
-    # Mesmo que exista um documento com o mesmo numero_wpp e PROBLEMA, vamos criar um novo deal
-    total_documents = collection.count_documents({})
-    deal_id = total_documents -70  # Calcula o deal_id baseado no número total de documentos
-
-    # Criar um novo deal no Pipedrive
-    deal = {
-        'title': f'{deal_id} - {problema} - {numero_wpp}',
-        'org_id': 12,
-        'value': 1500,  # Valor padrão, pode ser customizado
-        'currency': 'BRL',
-        'user_id': None,
-        'person_id': None,
-        'stage_id': 1,
-        'status': 'open',
-        'expected_close_date': now.strftime('%Y-%m-%d'),
-        'probability': 30,
-        'lost_reason': None,
-        'visible_to': 1,
-        'add_time': now.strftime('%Y-%m-%d')
-    }
-
-    pipedrive_deal_id = create_pipedrive_deal(deal)
-    if pipedrive_deal_id:
-        data['pipedrive_deal_id'] = pipedrive_deal_id
-
-    # Armazenar os dados no MongoDB
-    data['deal_id'] = deal_id  # Define o novo deal_id
-    data['created_at'] = now
-    data['last_modified'] = now
-    data['RAW_DATA'] = data.copy()  # Inicializa RAW_DATA com os dados atuais
-
-    try:
-        # Insere um novo documento no MongoDB
-        result = collection.update_one(
-            {'numero_wpp': numero_wpp, 'PROBLEMA': problema},  # Filtro por numero_wpp e PROBLEMA
-            {'$set': data, '$setOnInsert': {'RAW_DATA': data['RAW_DATA']}},  # Atualiza ou insere RAW_DATA
-            upsert=True  # Insere um novo documento se nenhum for encontrado
-        )
-        
-        logging.info(f"Document updated/inserted successfully: {result}")
-        
-        # Chama a função para gerar o PDF e fazer upload
-        try:
-            save_data_as_pdf_and_upload(data, deal_id)
-            logging.info("PDF gerado e upload feito com sucesso.")
-        except Exception as e:
-            logging.error(f"Falha ao gerar ou fazer upload do PDF: {e}")
-            return {'status': 'Dados armazenados, mas falha ao gerar/fazer upload do PDF', 'deal_id': deal_id}, 500
-
-        return {'status': 'Dados armazenados com sucesso e PDF feito upload', 'deal_id': deal_id}, 200
-
-    except errors.PyMongoError as e:
-        logging.error(f"Falha ao armazenar dados no MongoDB: {e}")
-        return {'error': 'Falha ao armazenar dados'}, 500
 
 # def store_data(data):
 #     if not data:
