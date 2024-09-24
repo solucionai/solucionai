@@ -57,113 +57,6 @@ def create_pipedrive_deal(deal):
         logging.error(f"Request to Pipedrive API failed: {e}")
         return None
 
-# def store_data(data):
-#     if not data:
-#         logging.warning("No data provided in the request")
-#         return {'error': 'No data provided'}, 400
-
-#     numero_wpp = data.get('numero_wpp')
-#     problema = data.get('PROBLEMA')
-
-#     if not numero_wpp:
-#         logging.warning('Field "numero_wpp" is required in the request')
-#         return {'error': 'Field "numero_wpp" is required'}, 400
-
-#     if not problema:
-#         logging.warning('Field "PROBLEMA" is required in the request')
-#         return {'error': 'Field "PROBLEMA" is required'}, 400
-
-#     now = datetime.utcnow()
-
-#     # Check if a document with the same numero_wpp and PROBLEMA exists
-#     existing_document = collection.find_one({'numero_wpp': numero_wpp, 'PROBLEMA': problema})
-    
-#     new_id = None  # Initialize new_id to avoid reference error
-
-#     if existing_document:
-#         # Recalculate the deal_id for existing documents
-#         total_documents = collection.count_documents({})
-#         deal_id = total_documents -71  # Calculate the deal_id based on the total number of documents
-
-#         print('data existing document', data)
-        
-#         # If it exists, update the existing document
-#         data['last_modified'] = now
-#         existing_raw_data = existing_document.get('RAW_DATA', {})
-#         updated_raw_data = {**existing_raw_data, **data}
-#         data['RAW_DATA'] = updated_raw_data
-#         data['deal_id'] = deal_id  # Set the recalculated deal_id for the existing document
-#         new_id = deal_id  # Use the recalculated deal_id for return
-#     else:
-#         # If not, count total documents to set new deal_id
-#         total_documents = collection.count_documents({})
-#         deal_id = total_documents -70  # Calculate the deal_id based on the total number of documents
-
-#         # Create a new document with the new deal_id
-#         data['deal_id'] = deal_id  # Set the new deal_id
-#         data['created_at'] = now
-#         data['last_modified'] = now
-#         data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
-
-#         print('data copy:', data)
-        
-#         # Create a new deal in Pipedrive
-#         deal = {
-#             'title': f'{deal_id} - {problema} - {numero_wpp}',
-#             'org_id': 12,  # Optional: If you have an organization ID
-#             'value': 1500,  # Example value, you may want to customize this
-#             'currency': 'BRL',
-#             'user_id': None,
-#             'person_id': None,  # You can pass the user ID if available
-#             'stage_id': 1,  # Customize stage ID based on your pipeline
-#             'status': 'open',
-#             'expected_close_date': now.strftime('%Y-%m-%d'),
-#             'probability': 30,
-#             'lost_reason': None,
-#             'visible_to': 1,
-#             'add_time': now.strftime('%Y-%m-%d')
-#         }
-
-#         pipedrive_deal_id = create_pipedrive_deal(deal)
-#         if pipedrive_deal_id:
-#             data['pipedrive_deal_id'] = pipedrive_deal_id
-
-#         new_id = deal_id  # Assign deal_id to new_id for new documents
-
-#     raw_data_to_store = data.pop('RAW_DATA')
-
-#     try:
-#         # Upsert logic based on whether the document already exists
-#         result = collection.update_one(
-#             {'numero_wpp': numero_wpp, 'PROBLEMA': problema},  # Filter by numero_wpp and PROBLEMA
-#             {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Update or insert RAW_DATA
-#             upsert=True  # Insert a new document if no match is found
-#         )
-        
-#         if existing_document:
-#             result = collection.update_one(
-#                 {'numero_wpp': numero_wpp, 'PROBLEMA': problema},
-#                 {'$set': {'RAW_DATA': raw_data_to_store}}
-#             )
-        
-#         logging.info(f"Document updated/inserted successfully: {result}")
-
-#         data = raw_data_to_store
-        
-#         # Call the function to generate PDF and upload
-#         try:
-#             print(new_id)
-#             save_data_as_pdf_and_upload(data, new_id)
-#             logging.info("PDF generated and uploaded successfully.")
-#         except Exception as e:
-#             logging.error(f"Failed to generate or upload PDF: {e}")
-#             return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id}, 500
-
-#         return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id}, 200
-
-#     except errors.PyMongoError as e:
-#         logging.error(f"Failed to store data in MongoDB: {e}")
-#         return {'error': 'Failed to store data'}, 500
 def store_data(data):
     if not data:
         logging.warning("No data provided in the request")
@@ -180,67 +73,98 @@ def store_data(data):
         logging.warning('Field "PROBLEMA" is required in the request')
         return {'error': 'Field "PROBLEMA" is required'}, 400
 
-    # Verificar se o numero_wpp está no banco de dados do BotConversa antes de criar um novo deal
-    existing_bot_conversa_contact = collection.find_one({'numero_wpp': numero_wpp})
-    if not existing_bot_conversa_contact:
-        logging.warning(f"Numero {numero_wpp} não encontrado no banco de dados do BotConversa.")
-        return {'error': 'Numero não encontrado no banco de dados'}, 404
-
     now = datetime.utcnow()
 
-    # Mesmo que exista um documento com o mesmo numero_wpp e PROBLEMA, vamos criar um novo deal
-    total_documents = collection.count_documents({})
-    deal_id = total_documents -70  # Calcula o deal_id baseado no número total de documentos
+    # Check if a document with the same numero_wpp and PROBLEMA exists
+    existing_document = collection.find_one({'numero_wpp': numero_wpp, 'PROBLEMA': problema})
+    
+    new_id = None  # Initialize new_id to avoid reference error
 
-    # Criar um novo deal no Pipedrive
-    deal = {
-        'title': f'{deal_id} - {problema} - {numero_wpp}',
-        'org_id': 12,
-        'value': 1500,  # Valor padrão, pode ser customizado
-        'currency': 'BRL',
-        'user_id': None,
-        'person_id': None,
-        'stage_id': 1,
-        'status': 'open',
-        'expected_close_date': now.strftime('%Y-%m-%d'),
-        'probability': 30,
-        'lost_reason': None,
-        'visible_to': 1,
-        'add_time': now.strftime('%Y-%m-%d')
-    }
+    if existing_document:
+        # Recalculate the deal_id for existing documents
+        total_documents = collection.count_documents({})
+        deal_id = total_documents -71  # Calculate the deal_id based on the total number of documents
 
-    pipedrive_deal_id = create_pipedrive_deal(deal)
-    if pipedrive_deal_id:
-        data['pipedrive_deal_id'] = pipedrive_deal_id
+        print('data existing document', data)
+        
+        # If it exists, update the existing document
+        data['last_modified'] = now
+        existing_raw_data = existing_document.get('RAW_DATA', {})
+        updated_raw_data = {**existing_raw_data, **data}
+        data['RAW_DATA'] = updated_raw_data
+        data['deal_id'] = deal_id  # Set the recalculated deal_id for the existing document
+        new_id = deal_id  # Use the recalculated deal_id for return
+    else:
+        # If not, count total documents to set new deal_id
+        total_documents = collection.count_documents({})
+        deal_id = total_documents -70  # Calculate the deal_id based on the total number of documents
 
-    # Armazenar os dados no MongoDB
-    data['deal_id'] = deal_id  # Define o novo deal_id
-    data['created_at'] = now
-    data['last_modified'] = now
+        # Create a new document with the new deal_id
+        data['deal_id'] = deal_id  # Set the new deal_id
+        data['created_at'] = now
+        data['last_modified'] = now
+        data['RAW_DATA'] = data.copy()  # Initialize RAW_DATA with the current data
+
+        print('data copy:', data)
+        
+        # Create a new deal in Pipedrive
+        deal = {
+            'title': f'{deal_id} - {problema} - {numero_wpp}',
+            'org_id': 12,  # Optional: If you have an organization ID
+            'value': 1500,  # Example value, you may want to customize this
+            'currency': 'BRL',
+            'user_id': None,
+            'person_id': None,  # You can pass the user ID if available
+            'stage_id': 1,  # Customize stage ID based on your pipeline
+            'status': 'open',
+            'expected_close_date': now.strftime('%Y-%m-%d'),
+            'probability': 30,
+            'lost_reason': None,
+            'visible_to': 1,
+            'add_time': now.strftime('%Y-%m-%d')
+        }
+
+        pipedrive_deal_id = create_pipedrive_deal(deal)
+        if pipedrive_deal_id:
+            data['pipedrive_deal_id'] = pipedrive_deal_id
+
+        new_id = deal_id  # Assign deal_id to new_id for new documents
+
+    raw_data_to_store = data.pop('RAW_DATA')
 
     try:
-        # Insere um novo documento no MongoDB
+        # Upsert logic based on whether the document already exists
         result = collection.update_one(
-            {'numero_wpp': numero_wpp, 'PROBLEMA': problema},  # Filtro por numero_wpp e PROBLEMA
-            {'$set': data},  # Atualiza os dados
-            upsert=True  # Insere um novo documento se nenhum for encontrado
+            {'numero_wpp': numero_wpp, 'PROBLEMA': problema},  # Filter by numero_wpp and PROBLEMA
+            {'$set': data, '$setOnInsert': {'RAW_DATA': raw_data_to_store}},  # Update or insert RAW_DATA
+            upsert=True  # Insert a new document if no match is found
         )
         
-        logging.info(f"Document updated/inserted successfully: {result}")
+        if existing_document:
+            result = collection.update_one(
+                {'numero_wpp': numero_wpp, 'PROBLEMA': problema},
+                {'$set': {'RAW_DATA': raw_data_to_store}}
+            )
         
-        # Chama a função para gerar o PDF e fazer upload
-        try:
-            save_data_as_pdf_and_upload(data, deal_id)
-            logging.info("PDF gerado e upload feito com sucesso.")
-        except Exception as e:
-            logging.error(f"Falha ao gerar ou fazer upload do PDF: {e}")
-            return {'status': 'Dados armazenados, mas falha ao gerar/fazer upload do PDF', 'deal_id': deal_id}, 500
+        logging.info(f"Document updated/inserted successfully: {result}")
 
-        return {'status': 'Dados armazenados com sucesso e PDF feito upload', 'deal_id': deal_id}, 200
+        data = raw_data_to_store
+        
+        # Call the function to generate PDF and upload
+        try:
+            print(new_id)
+            save_data_as_pdf_and_upload(data, new_id)
+            logging.info("PDF generated and uploaded successfully.")
+        except Exception as e:
+            logging.error(f"Failed to generate or upload PDF: {e}")
+            return {'status': 'Data stored but failed to generate/upload PDF', 'deal_id': new_id}, 500
+
+        return {'status': 'Data stored successfully and PDF uploaded', 'deal_id': new_id}, 200
 
     except errors.PyMongoError as e:
-        logging.error(f"Falha ao armazenar dados no MongoDB: {e}")
-        return {'error': 'Falha ao armazenar dados'}, 500
+        logging.error(f"Failed to store data in MongoDB: {e}")
+        return {'error': 'Failed to store data'}, 500
+
 
 
 
